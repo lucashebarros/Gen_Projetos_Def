@@ -163,11 +163,7 @@
             });
         });
 
-        cancelEditBtn.addEventListener('click', () => {
-            editProjectForm.reset(); 
-            editProjectForm.style.display = 'none'; 
-        });
-        
+       
         editProjectForm.addEventListener('submit', (e) => {
             e.preventDefault();
             let id = document.getElementById('edit-project-id').value;
