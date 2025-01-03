@@ -143,7 +143,6 @@
     <footer>
         Suporte BI &copy; 2024
     </footer>
-
 <script>
     const addProjectForm = document.querySelector('#add-project-form');
     const editProjectForm = document.querySelector('#edit-project-form');
@@ -184,8 +183,7 @@
     });
 
     cancelEditBtn.addEventListener('click', () => {
-        editProjectForm.reset();
-        editProjectForm.style.display = 'none';
+        editProjectForm.style.display = 'none'; // Apenas esconde o formulário sem resetar
     });
 
     function renderProject(doc) {
