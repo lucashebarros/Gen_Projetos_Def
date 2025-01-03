@@ -93,99 +93,150 @@
     </script>
 </head>
 <body>
-    <header>
-        <img src="logo.png" alt="Logo da Empresa">
-        Gerenciador de Projetos de BI
-    </header>
+  <header>
+    <img src="logo.png" alt="Logo da Empresa">
+    Gerenciador de Projetos de BI
+  </header>
 
-    <main>
-        <form id="add-project-form">
-            <input type="text" id="project-name" placeholder="Nome do Projeto">
-            <input type="text" id="project-status" placeholder="Situação Atual">
-            <input type="text" id="project-deadline" placeholder="Prazo">
-            <input type="text" id="project-priority" placeholder="Prioridade">
-            <button type="submit">Adicionar Projeto</button>
-        </form>
+  <main>
+    <form id="add-project-form">
+      <input type="text" id="project-name" placeholder="Nome do Projeto">
+      <input type="text" id="project-status" placeholder="Situação Atual">
+      <input type="text" id="project-deadline" placeholder="Prazo">
+      <input type="text" id="project-priority" placeholder="Prioridade">
+      <button type="submit">Adicionar Projeto</button>
+    </form>
 
-        <div id="project-list">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Projeto</th>
-                        <th>Situação Atual</th>
-                        <th>Prazo</th>
-                        <th>Prioridade</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="projects-tbody">
-                </tbody>
-            </table>
-        </div>
-    </main>
+    <form id="edit-project-form" style="display: none;">
+      <input type="hidden" id="edit-project-id">
+      <input type="text" id="edit-project-name" placeholder="Nome do Projeto">
+      <input type="text" id="edit-project-status" placeholder="Situação Atual">
+      <input type="text" id="edit-project-deadline" placeholder="Prazo">
+      <input type="text" id="edit-project-priority" placeholder="Prioridade">
+      <button type="submit">Salvar Alterações</button>
+    </form>
 
-    <footer>
-        Suporte BI &copy; 2024
-    </footer>
+    <div id="project-list">
+      <table>
+        <thead>
+          <tr>
+            <th>Projeto</th>
+            <th>Situação Atual</th>
+            <th>Prazo</th>
+            <th>Prioridade</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="projects-tbody">
+        </tbody>
+      </table>
+    </div>
+  </main>
 
-    <script>
-        const addProjectForm = document.querySelector('#add-project-form');
-        const projectsTbody = document.querySelector('#projects-tbody');
+  <footer>
+    Suporte BI &copy; 2024
+  </footer>
 
-        addProjectForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            db.collection('projects').add({
-                name: addProjectForm['project-name'].value,
-                status: addProjectForm['project-status'].value,
-                deadline: addProjectForm['project-deadline'].value,
-                priority: addProjectForm['project-priority'].value
-            });
-            addProjectForm.reset();
-        });
+  <script>
+    const addProjectForm = document.querySelector('#add-project-form');
+    const editProjectForm = document.querySelector('#edit-project-form');
+    const projectsTbody = document.querySelector('#projects-tbody');
 
-        function renderProject(doc) {
-            let tr = document.createElement('tr');
-            let name = document.createElement('td');
-            let status = document.createElement('td');
-            let deadline = document.createElement('td');
-            let priority = document.createElement('td');
-            let actions = document.createElement('td');
-            let cross = document.createElement('button');
+    addProjectForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      db.collection('projects').add({
+        name: addProjectForm['project-name'].value,
+        status: addProjectForm['project-status'].value,
+        deadline: addProjectForm['project-deadline'].value,
+        priority: addProjectForm['project-priority'].value
+      }).then(() => {
+        addProjectForm.reset();
+      }).catch((error) => {
+        console.error('Erro ao adicionar projeto: ', error);
+      });
+    });
 
-            tr.setAttribute('data-id', doc.id);
-            name.textContent = doc.data().name;
-            status.textContent = doc.data().status;
-            deadline.textContent = doc.data().deadline;
-            priority.textContent = doc.data().priority;
-            cross.textContent = 'Remover';
+    editProjectForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let id = document.getElementById('edit-project-id').value;
+      db.collection('projects').doc(id).update({
+        name: editProjectForm['edit-project-name'].value,
+        status: editProjectForm['edit-project-status'].value,
+        deadline: editProjectForm['edit-project-deadline'].value,
+        priority: editProjectForm['edit-project-priority'].value
+      }).then(() => {
+        editProjectForm.reset();
+        editProjectForm.style.display = 'none';
+      }).catch((error) => {
+        console.error('Erro ao editar projeto: ', error);
+      });
+    });
 
-            actions.appendChild(cross);
-            tr.appendChild(name);
-            tr.appendChild(status);
-            tr.appendChild(deadline);
-            tr.appendChild(priority);
-            tr.appendChild(actions);
+    function renderProject(doc) {
+      let tr = document.createElement('tr');
+      let name = document.createElement('td');
+      let status = document.createElement('td');
+      let deadline = document.createElement('td');
+      let priority = document.createElement('td');
+      let actions = document.createElement('td');
+      let edit = document.createElement('button');
+      let cross = document.createElement('button');
 
-            projectsTbody.appendChild(tr);
+      tr.setAttribute('data-id', doc.id);
+      name.textContent = doc.data().name;
+      status.textContent = doc.data().status;
+      deadline.textContent = doc.data().deadline;
+      priority.textContent = doc.data().priority;
+      edit.textContent = 'Editar';
+      cross.textContent = 'Remover';
 
-            cross.addEventListener('click', (e) => {
-                e.stopPropagation();
-                let id = e.target.parentElement.parentElement.getAttribute('data-id');
-                db.collection('projects').doc(id).delete();
-            });
+      actions.appendChild(edit);
+      actions.appendChild(cross);
+      tr.appendChild(name);
+      tr.appendChild(status);
+      tr.appendChild(deadline);
+      tr.appendChild(priority);
+      tr.appendChild(actions);
+
+      projectsTbody.appendChild(tr);
+
+      // Função de Editar Projeto
+      edit.addEventListener('click', (e) => {
+        e.stopPropagation();
+        let id = e.target.parentElement.parentElement.getAttribute('data-id');
+        document.getElementById('edit-project-id').value = id;
+        document.getElementById('edit-project-name').value = doc.data().name;
+        document.getElementById('edit-project-status').value = doc.data().status;
+        document.getElementById('edit-project-deadline').value = doc.data().deadline;
+        document.getElementById('edit-project-priority').value = doc.data().priority;
+        editProjectForm.style.display = 'block';
+      });
+
+      // Função de Remover Projeto
+      cross.addEventListener('click', (e) => {
+        e.stopPropagation();
+        let id = e.target.parentElement.parentElement.getAttribute('data-id');
+        db.collection('projects').doc(id).delete();
+      });
+    }
+
+    db.collection('projects').onSnapshot((snapshot) => {
+      let changes = snapshot.docChanges();
+      changes.forEach(change => {
+        if (change.type == 'added') {
+          renderProject(change.doc);
+        } else if (change.type == 'removed') {
+          let tr = projectsTbody.querySelector('[data-id=' + change.doc.id + ']');
+          projectsTbody.removeChild(tr);
+        } else if (change.type == 'modified') {
+          let tr = projectsTbody.querySelector('[data-id=' + change.doc.id + ']');
+          tr.querySelector('td:nth-child(1)').textContent = change.doc.data().name;
+          tr.querySelector('td:nth-child(2)').textContent = change.doc.data().status;
+          tr.querySelector('td:nth-child(3)').textContent = change.doc.data().deadline;
+          tr.querySelector('td:nth-child(4)').textContent = change.doc.data().priority;
         }
-
-        db.collection('projects').onSnapshot((snapshot) => {
-            let changes = snapshot.docChanges();
-            changes.forEach(change => {
-                if (change.type == 'added') {
-                    renderProject(change.doc);
-                } else if (change.type == 'removed') {
-                    let tr = projectsTbody.querySelector('[data-id=' + change.doc.id + ']');
-                    projectsTbody.removeChild(tr);
-                }
-            });
-        });
-    </script>
+      });
+    });
+  </script>
 </body>
 </html>
