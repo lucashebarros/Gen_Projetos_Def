@@ -144,108 +144,116 @@
         Suporte BI &copy; 2024
     </footer>
 
-    <script>
-        const addProjectForm = document.querySelector('#add-project-form');
-        const editProjectForm = document.querySelector('#edit-project-form');
-        const projectsTbody = document.querySelector('#projects-tbody');
+<script>
+    const addProjectForm = document.querySelector('#add-project-form');
+    const editProjectForm = document.querySelector('#edit-project-form');
+    const cancelEditBtn = document.createElement('button'); // Criando o botão "Cancelar"
+    cancelEditBtn.id = 'cancel-edit';
+    cancelEditBtn.textContent = 'Cancelar';
+    editProjectForm.appendChild(cancelEditBtn); // Adicionando o botão ao formulário
+    const projectsTbody = document.querySelector('#projects-tbody');
 
-        addProjectForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            db.collection('projects').add({
-                name: addProjectForm['project-name'].value,
-                status: addProjectForm['project-status'].value,
-                deadline: addProjectForm['project-deadline'].value,
-                priority: addProjectForm['project-priority'].value
-            }).then(() => {
-                addProjectForm.reset();
-            }).catch((error) => {
-                console.error('Erro ao adicionar projeto: ', error);
-            });
+    addProjectForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        db.collection('projects').add({
+            name: addProjectForm['project-name'].value,
+            status: addProjectForm['project-status'].value,
+            deadline: addProjectForm['project-deadline'].value,
+            priority: addProjectForm['project-priority'].value
+        }).then(() => {
+            addProjectForm.reset();
+        }).catch((error) => {
+            console.error('Erro ao adicionar projeto: ', error);
+        });
+    });
+
+    editProjectForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let id = document.getElementById('edit-project-id').value;
+        db.collection('projects').doc(id).update({
+            name: editProjectForm['edit-project-name'].value,
+            status: editProjectForm['edit-project-status'].value,
+            deadline: editProjectForm['edit-project-deadline'].value,
+            priority: editProjectForm['edit-project-priority'].value
+        }).then(() => {
+            editProjectForm.reset();
+            editProjectForm.style.display = 'none';
+        }).catch((error) => {
+            console.error('Erro ao editar projeto: ', error);
+        });
+    });
+
+    cancelEditBtn.addEventListener('click', () => {
+        editProjectForm.reset();
+        editProjectForm.style.display = 'none';
+    });
+
+    function renderProject(doc) {
+        let tr = document.createElement('tr');
+        let name = document.createElement('td');
+        let status = document.createElement('td');
+        let deadline = document.createElement('td');
+        let priority = document.createElement('td');
+        let actions = document.createElement('td');
+        let edit = document.createElement('button');
+        let cross = document.createElement('button');
+
+        tr.setAttribute('data-id', doc.id);
+        name.textContent = doc.data().name;
+        status.textContent = doc.data().status;
+        deadline.textContent = doc.data().deadline;
+        priority.textContent = doc.data().priority;
+        edit.textContent = 'Editar';
+        cross.textContent = 'Remover';
+
+        actions.classList.add('action-buttons');
+        actions.appendChild(edit);
+        actions.appendChild(cross);
+        tr.appendChild(name);
+        tr.appendChild(status);
+        tr.appendChild(deadline);
+        tr.appendChild(priority);
+        tr.appendChild(actions);
+
+        projectsTbody.appendChild(tr);
+
+        // Função de Editar Projeto
+        edit.addEventListener('click', (e) => {
+            e.stopPropagation();
+            let id = e.target.parentElement.parentElement.getAttribute('data-id');
+            document.getElementById('edit-project-id').value = id;
+            document.getElementById('edit-project-name').value = doc.data().name;
+            document.getElementById('edit-project-status').value = doc.data().status;
+            document.getElementById('edit-project-deadline').value = doc.data().deadline;
+            document.getElementById('edit-project-priority').value = doc.data().priority;
+            editProjectForm.style.display = 'block';
         });
 
-       
-        editProjectForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            let id = document.getElementById('edit-project-id').value;
-            db.collection('projects').doc(id).update({
-                name: editProjectForm['edit-project-name'].value,
-                status: editProjectForm['edit-project-status'].value,
-                deadline: editProjectForm['edit-project-deadline'].value,
-                priority: editProjectForm['edit-project-priority'].value
-            }).then(() => {
-                editProjectForm.reset();
-                editProjectForm.style.display = 'none';
-            }).catch((error) => {
-                console.error('Erro ao editar projeto: ', error);
-            });
+        // Função de Remover Projeto
+        cross.addEventListener('click', (e) => {
+            e.stopPropagation();
+            let id = e.target.parentElement.parentElement.getAttribute('data-id');
+            db.collection('projects').doc(id).delete();
         });
+    }
 
-        function renderProject(doc) {
-            let tr = document.createElement('tr');
-            let name = document.createElement('td');
-            let status = document.createElement('td');
-            let deadline = document.createElement('td');
-            let priority = document.createElement('td');
-            let actions = document.createElement('td');
-            let edit = document.createElement('button');
-            let cross = document.createElement('button');
-
-            tr.setAttribute('data-id', doc.id);
-            name.textContent = doc.data().name;
-            status.textContent = doc.data().status;
-            deadline.textContent = doc.data().deadline;
-            priority.textContent = doc.data().priority;
-            edit.textContent = 'Editar';
-            cross.textContent = 'Remover';
-
-            actions.classList.add('action-buttons');
-            actions.appendChild(edit);
-            actions.appendChild(cross);
-            tr.appendChild(name);
-            tr.appendChild(status);
-            tr.appendChild(deadline);
-            tr.appendChild(priority);
-            tr.appendChild(actions);
-
-            projectsTbody.appendChild(tr);
-
-            // Função de Editar Projeto
-            edit.addEventListener('click', (e) => {
-                e.stopPropagation();
-                let id = e.target.parentElement.parentElement.getAttribute('data-id');
-                document.getElementById('edit-project-id').value = id;
-                document.getElementById('edit-project-name').value = doc.data().name;
-                document.getElementById('edit-project-status').value = doc.data().status;
-                document.getElementById('edit-project-deadline').value = doc.data().deadline;
-                document.getElementById('edit-project-priority').value = doc.data().priority;
-                editProjectForm.style.display = 'block';
-            });
-
-            // Função de Remover Projeto
-            cross.addEventListener('click', (e) => {
-                e.stopPropagation();
-                let id = e.target.parentElement.parentElement.getAttribute('data-id');
-                db.collection('projects').doc(id).delete();
-            });
-        }
-
-        db.collection('projects').onSnapshot((snapshot) => {
-            let changes = snapshot.docChanges();
-            changes.forEach(change => {
-                if (change.type == 'added') {
-                    renderProject(change.doc);
-                } else if (change.type == 'removed') {
-                    let tr = projectsTbody.querySelector('[data-id=' + change.doc.id + ']');
-                    projectsTbody.removeChild(tr);
-                } else if (change.type == 'modified') {
-                    let tr = projectsTbody.querySelector('[data-id=' + change.doc.id + ']');
-                    tr.querySelector('td:nth-child(1)').textContent = change.doc.data().name;
-                    tr.querySelector('td:nth-child(2)').textContent = change.doc.data().status;
-                    tr.querySelector('td:nth-child(3)').textContent = change.doc.data().deadline;
-                    tr.querySelector('td:nth-child(4)').textContent = change.doc.data().priority;
-                }
-            });
+    db.collection('projects').onSnapshot((snapshot) => {
+        let changes = snapshot.docChanges();
+        changes.forEach(change => {
+            if (change.type == 'added') {
+                renderProject(change.doc);
+            } else if (change.type == 'removed') {
+                let tr = projectsTbody.querySelector('[data-id=' + change.doc.id + ']');
+                projectsTbody.removeChild(tr);
+            } else if (change.type == 'modified') {
+                let tr = projectsTbody.querySelector('[data-id=' + change.doc.id + ']');
+                tr.querySelector('td:nth-child(1)').textContent = change.doc.data().name;
+                tr.querySelector('td:nth-child(2)').textContent = change.doc.data().status;
+                tr.querySelector('td:nth-child(3)').textContent = change.doc.data().deadline;
+                tr.querySelector('td:nth-child(4)').textContent = change.doc.data().priority;
+            }
         });
-    </script>
+    });
+</script>
 </body>
 </html>
